@@ -1,7 +1,7 @@
 import numpy as np
 
 def compute_power(devices, P_fan, P_ac, P_lamp_group):
-    """Tính công suất tiêu thụ (W)."""
+    """Tính công suất tiêu thụ"""
     fans = devices[0:3]
     acs = devices[3:5]
     lamps = devices[5:7]
@@ -21,13 +21,13 @@ def discomfort_light(L, N, L_target):
     if N <= 0: return 0.0
     return max(0.0, L_target - L)
 
-def update_temperature(T, T_out, N, ac_levels, alpha, beta, dt, gamma_ac):
-    cooling = np.sum(gamma_ac[ac_levels])
-    return T + alpha*(T_out-T)*dt + beta*N - cooling + np.random.normal(0,0.05)
+def update_temperature(T, T_out, N, ac_levels, heat_trans_rate, people_heat_gain, dt, cooling_effect):
+    cooling = np.sum(cooling_effect[ac_levels])
+    return T + heat_trans_rate*(T_out-T)*dt + people_heat_gain*N - cooling + np.random.normal(0,0.05)
 
-def update_light(L_prev, lamps, kappa_lamp, scenario, step_idx):
+def update_light(L_prev, lamps, lamp_lux, scenario, step_idx):
     L_nat = float(scenario.iloc[min(step_idx, len(scenario)-1)]["L_nat"]) if scenario is not None else 200.0
-    L_next = L_nat + np.sum(kappa_lamp * lamps.astype(float)) + np.random.normal(0,1.0)
+    L_next = L_nat + np.sum(lamp_lux * lamps.astype(float)) + np.random.normal(0,1.0)
     return max(0.0, L_next)
 
 def compute_reward(T_next, L_next, N, D_curr, D_next, P_total,

@@ -6,8 +6,9 @@ from . import utils
 
 class SmartRoomEnv(gym.Env):
     """
-    Gym environment cho điều khiển phòng học thông minh.
-    State: [T, L, O, T_out, f1,f2,f3, ac1,ac2, light1,light2]
+    Gym environment custom cho phòng học thông minh:
+    State: [T, L, O, T_out,Dt]
+    Dt={f1,f2,f3, ac1,ac2, light1,light2}
     Action: MultiDiscrete [3,3,3, 3,3, 2,2] = (f1,f2,f3, c1,c2, d1,d2)
     """
     metadata = {"render_modes": ["human"]}
@@ -15,9 +16,9 @@ class SmartRoomEnv(gym.Env):
     def __init__(self,
                  scenario_csv: str = None,
                  dt_minutes: float = 5.0,
-                 alpha: float = 0.05, beta: float = 0.01,
-                 gamma_ac=(0.0, 0.5, 1.0),
-                 kappa_lamp=(300.0, 300.0),
+                 heat_trans_rate: float = 0.05, people_heat_gain: float = 0.01,
+                 cooling_effect=(0.0, 0.5, 1.0),
+                 lamp_lux=(300.0, 300.0),
                  p_user_override: float = 0.02,
                  user_override_enabled: bool = True,
                  max_steps: int = 96,
@@ -30,19 +31,17 @@ class SmartRoomEnv(gym.Env):
                  L_target: float = 300.0):
         super().__init__()
 
-        # hệ số thời gian + vật lý
         self.dt = dt_minutes / 60.0
-        self.alpha = alpha
-        self.beta = beta
-        self.gamma_ac = np.array(gamma_ac, dtype=np.float32)
-        self.kappa_lamp = np.array(kappa_lamp, dtype=np.float32)
+        self.heat_trans_rate = heat_trans_rate
+        self.people_heat_gain = people_heat_gain
+        self.cooling_effect = np.array(cooling_effect, dtype=np.float32)
+        self.lamp_lux = np.array(lamp_lux, dtype=np.float32)
 
         # override
         self.p_user_override = p_user_override
         self.user_override_enabled = user_override_enabled
         self.max_steps = max_steps
 
-        # reward weights
         self.c_energy = c_energy
         self.c_temp = c_temp
         self.c_light = c_light
@@ -51,7 +50,6 @@ class SmartRoomEnv(gym.Env):
         self.delta_T = delta_T
         self.L_target = L_target
 
-        # công suất thiết bị
         self.P_fan = [0.0, 75.0, 110.0]
         self.P_lamp_group = 40.0
         self.P_ac = [0.0, 1000.0, 2000.0]
@@ -62,7 +60,6 @@ class SmartRoomEnv(gym.Env):
         obs_high = np.array([40.0,2000.0,200.0,50.0] + [2,2,2,2,2,1,1], dtype=np.float32)
         self.observation_space = spaces.Box(obs_low, obs_high, dtype=np.float32)
 
-        # scenario
         self.scenario = None
         if scenario_csv is not None:
             self.scenario = pd.read_csv(scenario_csv)
@@ -109,8 +106,8 @@ class SmartRoomEnv(gym.Env):
         D_next = utils.apply_user_override(D_agent, D_user, D_curr)
 
         # cập nhật trạng thái và reward thông qua utils
-        T_next = utils.update_temperature(T, T_out, N, D_next[3:5], self.alpha, self.beta, self.dt, self.gamma_ac)
-        L_next = utils.update_light(L, D_next[5:], self.kappa_lamp,
+        T_next = utils.update_temperature(T, T_out, N, D_next[3:5], self.heat_trans_rate, self.people_heat_gain, self.dt, self.cooling_effect)
+        L_next = utils.update_light(L, D_next[5:], self.lamp_lux,
                                     self.scenario, self._step_count)
         P_total = utils.compute_power(D_next, self.P_fan, self.P_ac, self.P_lamp_group)
         energy_kwh = P_total*self.dt/1000.0
