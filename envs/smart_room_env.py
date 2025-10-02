@@ -57,7 +57,7 @@ class SmartRoomEnv(gym.Env):
         # action/obs space
         self.action_space = spaces.MultiDiscrete([3,3,3, 3,3, 2,2])
         obs_low  = np.array([0.0,0.0,0.0,-10.0] + [0]*7, dtype=np.float32)
-        obs_high = np.array([40.0,2000.0,200.0,50.0] + [2,2,2,2,2,1,1], dtype=np.float32)
+        obs_high = np.array([40.0,2000.0,100.0,50.0] + [2,2,2,2,2,1,1], dtype=np.float32)
         self.observation_space = spaces.Box(obs_low, obs_high, dtype=np.float32)
 
         self.scenario = None
