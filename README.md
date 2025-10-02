@@ -48,8 +48,6 @@ smart-room-rl/
 │   └── figures/            # Biểu đồ reward, comfort, energy
 
 └── report/                 # Báo cáo + slide nhóm
-    ├── report.docx
-    ├── presentation.pptx
     └── images/             # Sơ đồ, hình minh họa
 ```
 
