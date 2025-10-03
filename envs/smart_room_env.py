@@ -18,7 +18,7 @@ class SmartRoomEnv(gym.Env):
                  dt_minutes: float = 5.0,
                  heat_trans_rate: float = 0.05, people_heat_gain: float = 0.01,
                  cooling_effect=(0.0, 0.5, 1.0),
-                 lamp_lux=(300.0, 300.0),
+                 lamp_lux=(200.0, 200.0),
                  p_user_override: float = 0.02,
                  user_override_enabled: bool = True,
                  max_steps: int = 96,
@@ -63,7 +63,7 @@ class SmartRoomEnv(gym.Env):
         self.scenario = None
         if scenario_csv is not None:
             self.scenario = pd.read_csv(scenario_csv)
-            for c in ["time","T_out","L_nat","N"]:
+            for c in ["T_out","L_nat","N"]:
                 if c not in self.scenario.columns:
                     raise ValueError(f"Scenario must contain {c}")
 
