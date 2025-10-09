@@ -1,6 +1,5 @@
 from .bdq_lite import BDQLiteAgent
-# Sau này có thể export thêm:
-# from .multi_head_dqn import MultiHeadDQNAgent
-# from .ar_q import ARQAgent
+from .ar_q import ARQAgent
+# from .multi_head_dqn import MultiHeadDQNAgent  # sau này thêm
 
-__all__ = ["BDQLiteAgent"]
+__all__ = ["BDQLiteAgent", "ARQAgent"]
