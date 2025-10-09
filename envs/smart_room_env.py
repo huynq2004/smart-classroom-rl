@@ -31,6 +31,7 @@ class SmartRoomEnv(gym.Env):
                  L_target: float = 300.0):
         super().__init__()
 
+        self.dt_minutes = dt_minutes
         self.dt = dt_minutes / 60.0
         self.heat_trans_rate = heat_trans_rate
         self.people_heat_gain = people_heat_gain
@@ -54,7 +55,7 @@ class SmartRoomEnv(gym.Env):
         self.P_lamp_group = 40.0
         self.P_ac = [0.0, 1000.0, 2000.0]
 
-        # action/obs space
+        # Action/Observation space
         self.action_space = spaces.MultiDiscrete([3,3,3, 3,3, 2,2])
         obs_low  = np.array([0.0,0.0,0.0,-10.0] + [0]*7, dtype=np.float32)
         obs_high = np.array([40.0,2000.0,100.0,50.0] + [2,2,2,2,2,1,1], dtype=np.float32)
@@ -98,29 +99,43 @@ class SmartRoomEnv(gym.Env):
         T,L,N,T_out = self.state[:4]
         D_curr = self.state[4:].astype(int)
 
-        # hành động agent + override
+        # --- Cập nhật theo scenario ---
+        if self.scenario is not None and len(self.scenario) > 0:
+            row = self.scenario.iloc[self._step_count % len(self.scenario)]
+            T_out = float(row["T_out"])
+            L_nat = float(row["L_nat"])
+            N = int(row["N"])
+        else:
+            L_nat = 200.0
+
+        # --- Hành động agent + override ---
         D_agent = np.array(action, dtype=int)
         D_user = self._sample_user_action(D_curr)
         if D_user is None:
             D_user = D_curr
         D_next = utils.apply_user_override(D_agent, D_user, D_curr)
 
-        # cập nhật trạng thái và reward thông qua utils
-        T_next = utils.update_temperature(T, T_out, N, D_next[3:5], self.heat_trans_rate, self.people_heat_gain, self.dt, self.cooling_effect)
-        L_next = utils.update_light(L, D_next[5:], self.lamp_lux,
-                                    self.scenario, self._step_count)
+        # --- Tính toán cập nhật ---
+        T_next = utils.update_temperature(
+            T, T_out, N, D_next[3:5],
+            self.heat_trans_rate, self.people_heat_gain, self.dt,
+            self.cooling_effect
+        )
+        L_next = utils.update_light(L, D_next[5:], self.lamp_lux, L_nat)
         P_total = utils.compute_power(D_next, self.P_fan, self.P_ac, self.P_lamp_group)
-        energy_kwh = P_total*self.dt/1000.0
+
+        # năng lượng (bất biến theo dt_minutes)
+        energy_kwh = P_total * self.dt_minutes / 60 / 1000
 
         reward, Dtemp, Dlight, S = utils.compute_reward(
             T_next, L_next, N,
             D_curr, D_next,
-            P_total,
+            energy_kwh,
             self.T_target, self.delta_T, self.L_target,
             self.c_energy, self.c_temp, self.c_light, self.c_switch
         )
 
-        self.state = np.array([T_next,L_next,float(N),T_out] + list(D_next.astype(float)), dtype=np.float32)
+        self.state = np.array([T_next, L_next, float(N), T_out] + list(D_next.astype(float)), dtype=np.float32)
         self._step_count += 1
         done = self._step_count >= self.max_steps
 
