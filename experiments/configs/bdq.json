@@ -1,6 +1,6 @@
 {
   "seed": 42,
-  "out_dir": "results",
+  "out_dir": "results/bdq",
   "env": { "dt_minutes": 15, "scenario_csv": null, "noise_std": 0.1 },
   "algo": {
     "buffer_size": 50000,
