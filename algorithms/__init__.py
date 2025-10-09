@@ -3,4 +3,4 @@ from .bdq_lite import BDQLiteAgent
 # from .multi_head_dqn import MultiHeadDQNAgent
 # from .ar_q import ARQAgent
 
-__all__ = ["BDQLiteAgent"]
+__all__ = ["BDQLiteAgent", "MultiHeadDQNAgent"]
