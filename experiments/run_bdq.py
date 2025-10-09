@@ -35,7 +35,6 @@ def main():
     env = SmartRoomEnv(
         dt_minutes=cfg.get("env", {}).get("dt_minutes", 15),
         scenario_csv=cfg.get("env", {}).get("scenario_csv", None),
-        noise_std=cfg.get("env", {}).get("noise_std", 0.1),
     )
     state_dim  = env.observation_space.shape[0]
     action_dims = env.action_space.nvec.tolist()
