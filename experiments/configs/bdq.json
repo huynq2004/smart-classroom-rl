@@ -1,29 +1,24 @@
 {
-    "seed": 42,
-    "out_dir": "results",
-  
-    "env": {
-      "dt_minutes": 15,
-      "scenario_csv": null,
-      "noise_std": 0.1
-    },
-  
-    "algo": {
-      "buffer_size": 50000,
-      "batch_size": 64,
-      "gamma": 0.99,
-      "lr": 0.001,
-      "epsilon_start": 0.20,
-      "epsilon_end": 0.05,
-      "epsilon_decay": 0.00005,
-      "tau": 0.01
-    },
-  
-    "train": {
-      "episodes": 200,
-      "save_every": 20,
-      "eval_every": 50,
-      "eval_episodes": 5
-    }
+  "seed": 42,
+  "out_dir": "results",
+  "env": { "dt_minutes": 15, "scenario_csv": null, "noise_std": 0.1 },
+  "algo": {
+    "buffer_size": 50000,
+    "batch_size": 64,
+    "gamma": 0.99,
+    "lr": 0.0005,
+    "epsilon_start": 0.20,
+    "epsilon_end": 0.05,
+    "epsilon_decay": 0.00003,
+    "tau": 0.01,
+    "grad_clip_norm": 5.0,
+    "warmup_steps": 1000
+  },
+  "train": {
+    "episodes": 400,
+    "save_every": 20,
+    "save_best": true,
+    "eval_every": 50,
+    "eval_episodes": 5
   }
-  
+}
