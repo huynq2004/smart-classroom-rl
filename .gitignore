@@ -1,0 +1,55 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+.Python
+
+# Environment files / local secrets
+.env
+.env.*
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
+
+# Testing / tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# --- Project outputs ---
+# Training artifacts and generated files
+results/logs/
+results/models/
+results/figures/
+results/**/*.csv
+results/**/*.png
+
+# Demo outputs
+demo_log.csv
+
+# Common model weight extensions
+*.pt
+*.pth
+
+# Misc caches
+.cache/
+checkpoints/
