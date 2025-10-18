@@ -11,8 +11,8 @@ def main():
     if args.algo == "bdq":
         cmd = ["python", "experiments/run_bdq.py"]
         if args.config: cmd += ["--config", args.config]
-    elif args.algo == "multihead":
-        cmd = ["python", "experiments/run_multi_head.py"]
+    elif args.algo == "ppo":
+        cmd = ["python", "experiments/run_ppo.py"]
         if args.config: cmd += ["--config", args.config]
     else:
         cmd = ["python", "experiments/run_arq.py"]
