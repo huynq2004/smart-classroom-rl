@@ -1,0 +1,27 @@
+{
+  "seed": 42,
+  "out_dir": "results",
+  "env": {
+    "dt_minutes": 15,
+    "scenario_csv": null
+  },
+  "algo": {
+    "lr": 0.0003,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "clip_eps": 0.2,
+    "epochs": 4,
+    "minibatch_size": 64,
+    "ent_coef": 0.0,
+    "value_coef": 0.5,
+    "max_grad_norm": 0.5,
+    "hidden": 256
+  },
+  "train": {
+    "episodes": 1000,
+    "num_actors": 1,
+    "save_every": 50,
+    "eval_every": 20,
+    "eval_episodes": 5
+  }
+}
