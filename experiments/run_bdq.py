@@ -1,9 +1,12 @@
 # Runner: đọc config, train, eval định kỳ, log CSV, lưu checkpoint/best/latest, vẽ reward.
 
-import os, csv, argparse
+import os, csv, argparse, sys
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
+
+# Add parent directory to path to import modules
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from envs import SmartRoomEnv
 from algorithms.bdq_lite import BDQLiteAgent
