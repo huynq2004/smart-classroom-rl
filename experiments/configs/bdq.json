@@ -1,24 +1,36 @@
 {
   "seed": 42,
   "out_dir": "results/bdq",
-  "env": { "dt_minutes": 15, "scenario_csv": null, "noise_std": 0.1 },
+
+  "env": {
+    "dt_minutes": 15,
+    "scenario_csv": null
+  },
+
   "algo": {
-    "buffer_size": 50000,
+    "buffer_size": 200000,
     "batch_size": 64,
     "gamma": 0.99,
-    "lr": 0.0005,
+    "lr": 0.0001,
+
     "epsilon_start": 0.20,
-    "epsilon_end": 0.05,
-    "epsilon_decay": 0.00003,
-    "tau": 0.01,
-    "grad_clip_norm": 5.0,
-    "warmup_steps": 1000
+    "epsilon_end": 0.02,
+    "epsilon_decay": 100000,
+
+    "warmup_steps": 1000,
+    "target_update_steps": 1000,
+
+    "per_alpha": 0.6,
+    "per_beta_start": 0.4,
+    "per_beta_frames": 100000,
+
+    "grad_clip_norm": 10.0
   },
+
   "train": {
-    "episodes": 400,
-    "save_every": 20,
-    "save_best": true,
-    "eval_every": 50,
+    "episodes": 1000,
+    "save_every": 50,
+    "eval_every": 20,
     "eval_episodes": 5
   }
 }

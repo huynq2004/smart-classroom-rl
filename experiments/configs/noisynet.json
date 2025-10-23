@@ -23,7 +23,7 @@
   "train": {
     "episodes": 1000,
     "save_every": 50,
-    "eval_every": 100,
+    "eval_every": 20,
     "eval_episodes": 5
   }
 }
