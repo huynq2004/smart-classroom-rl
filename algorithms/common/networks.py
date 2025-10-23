@@ -1,33 +1,62 @@
 import torch
 import torch.nn as nn
 from .noisy_layers import NoisyLinear
-class BDQNet(nn.Module):
-    """
-    BDQ-lite Network: trunk chung + dueling heads cho từng nhánh hành động.
-    """
-    def __init__(self, state_dim, action_dims):
-        super().__init__()
-        self.trunk = nn.Sequential(
-            nn.Linear(state_dim, 256), nn.ReLU(),
-            nn.Linear(256, 256), nn.ReLU()
-        )
-        # Mỗi nhánh: 1 Value-head + 1 Advantage-head
-        self.V_heads = nn.ModuleList([nn.Linear(256, 1) for _ in action_dims])
-        self.A_heads = nn.ModuleList([nn.Linear(256, n) for n in action_dims])
 
-    def forward(self, state):
+import torch
+import torch.nn as nn
+
+
+class BDQNet(nn.Module):
+    def __init__(self, state_dim, action_dims, hidden_trunk=(256, 256), hidden_head=128):
         """
-        state: FloatTensor [B, state_dim]
-        return: list Q_heads, mỗi phần tử kích thước [B, n_i]
+        Args:
+            state_dim   : int, số chiều trạng thái
+            action_dims : list[int], số lựa chọn cho từng nhánh hành động (N nhánh)
+            hidden_trunk: tuple layer cho trunk
+            hidden_head : độ rộng head (Value/Advantage)
         """
-        z = self.trunk(state)
+        super().__init__()
+        self.action_dims = list(action_dims)
+        self.n_branches = len(self.action_dims)
+
+        # Trunk chung
+        layers, in_f = [], state_dim
+        for h in hidden_trunk:
+            layers += [nn.Linear(in_f, h), nn.ReLU()]
+            in_f = h
+        self.trunk = nn.Sequential(*layers)
+
+        # 1 Value head chung
+        self.value_head = nn.Sequential(
+            nn.Linear(in_f, hidden_head), nn.ReLU(),
+            nn.Linear(hidden_head, 1)
+        )
+
+        # N Advantage-heads (mỗi nhánh 1 head)
+        self.adv_heads = nn.ModuleList([
+            nn.Sequential(
+                nn.Linear(in_f, hidden_head), nn.ReLU(),
+                nn.Linear(hidden_head, n_a)     # trả về A_d(s, ·)
+            )
+            for n_a in self.action_dims
+        ])
+
+    def forward(self, s):
+        """
+            s: Tensor [B, state_dim]
+        Returns:
+            list Q_heads: chiều dài = N; mỗi phần tử Tensor [B, n_a]
+        """
+        f = self.trunk(s)                   # [B, F]
+        V = self.value_head(f)              # [B, 1]
+
         Q_heads = []
-        for Vh, Ah in zip(self.V_heads, self.A_heads):
-            V = Vh(z)                              # [B,1]
-            A = Ah(z)                              # [B,n_i]
-            A_norm = A - A.mean(dim=1, keepdim=True)
-            Q_heads.append(V + A_norm)             # [B,n_i]
+        for head in self.adv_heads:
+            A = head(f)                     # [B, n_a]
+            A = A - A.mean(dim=1, keepdim=True)   # Eq.1 (trừ trung bình advantage theo nhánh)
+            Q_heads.append(V + A)           # [B, n_a]
         return Q_heads
+    
 class NoisyMultiHeadNet(nn.Module):
     """
     Trunk chung (Noisy) + per-branch output heads (Noisy).
