@@ -35,20 +35,10 @@ htmlcov/
 # Jupyter
 .ipynb_checkpoints/
 
-# --- Project outputs ---
-# Training artifacts and generated files
-results/logs/
-results/models/
-results/figures/
-results/**/*.csv
-results/**/*.png
 
 # Demo outputs
 demo_log.csv
 
-# Common model weight extensions
-*.pt
-*.pth
 
 # Misc caches
 .cache/
