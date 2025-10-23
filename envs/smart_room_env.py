@@ -2,12 +2,17 @@ import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
 import pandas as pd
-from . import utils
+
+try:
+    from . import utils
+except ImportError:
+    import envs.utils as utils
+
 
 class SmartRoomEnv(gym.Env):
     """
     Gym environment custom cho phòng học thông minh:
-    State: [T, L, O, T_out,Dt]
+    State: [T, L, O, T_out, Dt]
     Dt={f1,f2,f3, ac1,ac2, light1,light2}
     Action: MultiDiscrete [3,3,3, 3,3, 2,2] = (f1,f2,f3, c1,c2, d1,d2)
     """
@@ -28,7 +33,8 @@ class SmartRoomEnv(gym.Env):
                  c_switch: float = 0.1,
                  T_target: float = 24.0,
                  delta_T: float = 1.0,
-                 L_target: float = 300.0):
+                 L_target: float = 300.0,
+                 noise_std: float = 0.0):
         super().__init__()
 
         self.dt_minutes = dt_minutes
@@ -43,6 +49,7 @@ class SmartRoomEnv(gym.Env):
         self.user_override_enabled = user_override_enabled
         self.max_steps = max_steps
 
+        # hệ số phần thưởng
         self.c_energy = c_energy
         self.c_temp = c_temp
         self.c_light = c_light
@@ -51,6 +58,10 @@ class SmartRoomEnv(gym.Env):
         self.delta_T = delta_T
         self.L_target = L_target
 
+        # nhiễu (chỉ dùng cho NoisyNet)
+        self.noise_std = noise_std
+
+        # công suất thiết bị
         self.P_fan = [0.0, 75.0, 110.0]
         self.P_lamp_group = 40.0
         self.P_ac = [0.0, 1000.0, 2000.0]
@@ -61,6 +72,7 @@ class SmartRoomEnv(gym.Env):
         obs_high = np.array([40.0,2000.0,100.0,50.0] + [2,2,2,2,2,1,1], dtype=np.float32)
         self.observation_space = spaces.Box(obs_low, obs_high, dtype=np.float32)
 
+        # Kịch bản
         self.scenario = None
         if scenario_csv is not None:
             self.scenario = pd.read_csv(scenario_csv)
@@ -87,19 +99,18 @@ class SmartRoomEnv(gym.Env):
         self._step_count = 0
         T0, L0, N0, T_out0 = 27.0, 300.0, 0, 30.0
         D0 = np.zeros(7, dtype=int)
-        if self.scenario is not None and len(self.scenario)>0:
+        if self.scenario is not None and len(self.scenario) > 0:
             row = self.scenario.iloc[0]
             T_out0, L0, N0 = float(row["T_out"]), float(row["L_nat"]), int(row["N"])
-        self.state = np.concatenate(([T0,L0,N0,T_out0], D0)).astype(np.float32)
+        self.state = np.concatenate(([T0, L0, N0, T_out0], D0)).astype(np.float32)
         self.last_device_state = D0.copy()
-        return self.state.copy(), {}
+        return self._get_obs(), {}
 
     def step(self, action):
         assert self.action_space.contains(action), f"Invalid action {action}"
-        T,L,N,T_out = self.state[:4]
+        T, L, N, T_out = self.state[:4]
         D_curr = self.state[4:].astype(int)
 
-        # --- Cập nhật theo scenario ---
         if self.scenario is not None and len(self.scenario) > 0:
             row = self.scenario.iloc[self._step_count % len(self.scenario)]
             T_out = float(row["T_out"])
@@ -108,14 +119,12 @@ class SmartRoomEnv(gym.Env):
         else:
             L_nat = 200.0
 
-        # --- Hành động agent + override ---
         D_agent = np.array(action, dtype=int)
         D_user = self._sample_user_action(D_curr)
         if D_user is None:
             D_user = D_curr
         D_next = utils.apply_user_override(D_agent, D_user, D_curr)
 
-        # --- Tính toán cập nhật ---
         T_next = utils.update_temperature(
             T, T_out, N, D_next[3:5],
             self.heat_trans_rate, self.people_heat_gain, self.dt,
@@ -123,8 +132,6 @@ class SmartRoomEnv(gym.Env):
         )
         L_next = utils.update_light(L, D_next[5:], self.lamp_lux, L_nat)
         P_total = utils.compute_power(D_next, self.P_fan, self.P_ac, self.P_lamp_group)
-
-        # năng lượng (bất biến theo dt_minutes)
         energy_kwh = P_total * self.dt_minutes / 60 / 1000
 
         reward, Dtemp, Dlight, S = utils.compute_reward(
@@ -146,9 +153,16 @@ class SmartRoomEnv(gym.Env):
             "discomfort_light": Dlight,
             "switch_count": S
         }
-        return self.state.copy(), float(reward), done, False, info
+        return self._get_obs(), float(reward), done, False, info
+
+    def _get_obs(self):
+        obs = self.state.copy()
+        if self.noise_std > 0:
+            obs += np.random.normal(0, self.noise_std, size=obs.shape)
+        obs = np.clip(obs, self.observation_space.low, self.observation_space.high)
+        return obs.astype(np.float32)
 
     def render(self):
-        T,L,N,T_out = self.state[:4]
+        T, L, N, T_out = self.state[:4]
         D = self.state[4:].astype(int)
         print(f"step={self._step_count} | T={T:.2f}°C L={L:.1f}lux N={int(N)} Tout={T_out:.1f}°C | devices={D.tolist()}")
