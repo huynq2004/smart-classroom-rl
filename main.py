@@ -1,10 +1,10 @@
+# main.py (update)
 import argparse
-import subprocess
-import sys
+import subprocess, sys
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--algo", type=str, choices=["bdq", "multihead", "arq"], default="bdq")
+    parser.add_argument("--algo", type=str, choices=["bdq","noisynet","multihead","arq"], default="bdq")
     parser.add_argument("--config", type=str, default=None)
     args = parser.parse_args()
 
@@ -15,9 +15,9 @@ def main():
         cmd = ["python", "experiments/run_ppo.py"]
         if args.config: cmd += ["--config", args.config]
     else:
-        cmd = ["python", "experiments/run_arq.py"]
+        cmd = ["python", "experiments/run_noisynet.py"]
         if args.config: cmd += ["--config", args.config]
-
+          
     sys.exit(subprocess.call(cmd))
 
 if __name__ == "__main__":

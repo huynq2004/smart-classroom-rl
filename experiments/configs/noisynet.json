@@ -1,0 +1,29 @@
+{
+  "seed": 42,
+  "out_dir": "results/noisynet",
+
+  "env": {
+    "dt_minutes": 15,
+    "scenario_csv": null,
+    "noise_std": 0.05
+  },
+
+  "algo": {
+    "buffer_size": 50000,
+    "batch_size": 64,
+    "gamma": 0.99,
+    "lr": 0.0005,
+    "tau": 0.01,
+
+    "noisy": true,
+    "sigma_init": 0.017,
+    "noisy_shared": true
+  },
+
+  "train": {
+    "episodes": 1000,
+    "save_every": 50,
+    "eval_every": 100,
+    "eval_episodes": 5
+  }
+}
