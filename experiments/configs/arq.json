@@ -1,9 +1,10 @@
 {
   "seed": 42,
-  "out_dir": "results",
+  "out_dir": "results/arq",
   "env": {
     "dt_minutes": 15,
-    "scenario_csv": null
+    "scenario_csv": null,
+    "noise_std": 0.1
   },
   "algo": {
     "buffer_size": 5000,
@@ -16,9 +17,9 @@
     "tau": 0.05
   },
   "train": {
-    "episodes": 30,
-    "save_every": 10,
-    "eval_every": 10,
-    "eval_episodes": 2
+    "episodes": 400,
+    "save_every": 20,
+    "eval_every": 50,
+    "eval_episodes": 5
   }
 }
