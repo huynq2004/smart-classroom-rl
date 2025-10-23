@@ -1,6 +1,5 @@
 from .bdq_lite import BDQLiteAgent
-from .ar_q import ARQAgent
 from .noisynet_dqn import NoisyDQNAgent
-from .multi_head_dqn import MultiHeadDQNAgent  
+from .ppo_agent import PPOAgent
 
-__all__ = ["BDQLiteAgent", "MultiHeadDQNAgent", "ARQAgent", "NoisyDQNAgent"]
+__all__ = ["BDQLiteAgent", "PPOAgent", "NoisyDQNAgent"]

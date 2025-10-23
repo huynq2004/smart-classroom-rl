@@ -53,3 +53,8 @@ demo_log.csv
 # Misc caches
 .cache/
 checkpoints/
+
+# --- Allow PPO results (for demo) ---
+# Cho phép Git theo dõi riêng thư mục kết quả PPO
+!results/ppo/
+!results/ppo/**
