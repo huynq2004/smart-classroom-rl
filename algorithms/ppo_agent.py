@@ -5,7 +5,6 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.distributions import Categorical
 
-
 class ActorCritic(nn.Module):
     def __init__(self, state_dim, action_dims, hidden=256):
         super().__init__()

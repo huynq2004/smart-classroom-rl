@@ -1,4 +1,5 @@
-# experiments/run_ppo.py
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import os, csv, argparse, time
 import numpy as np
 import torch
@@ -7,6 +8,7 @@ import matplotlib.pyplot as plt
 from envs import SmartRoomEnv
 from algorithms.ppo_agent import PPOAgent
 from config import load_config, set_seed, ensure_dirs
+from algorithms.common.utils import make_result_dirs   
 
 
 def make_envs(n, env_kwargs):
@@ -66,6 +68,9 @@ def main():
     out_dir = cfg.get("out_dir", "results")
     ensure_dirs(out_dir)
 
+    # Tạo thư mục riêng cho PPO
+    paths = make_result_dirs("ppo")
+
     # Env config
     env_kwargs = {
         "dt_minutes":  cfg["env"].get("dt_minutes", 15),
@@ -85,9 +90,11 @@ def main():
 
     agent = PPOAgent(state_dim, action_dims, cfg["algo"])
 
-    # Logging
-    log_path = os.path.join(out_dir, "logs", "ppo_training_log.csv")
-    fig_path = os.path.join(out_dir, "figures", "ppo_reward_curve.png")
+    # Đường dẫn riêng cho PPO
+    log_path = os.path.join(paths["logs"], "ppo_training_log.csv")
+    fig_path = os.path.join(paths["figures"], "ppo_reward_curve.png")
+
+    # Khởi tạo file log
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
     with open(log_path, "w", newline="") as f:
         csv.writer(f).writerow(["episode","reward","eval_mean","eval_std",
@@ -135,11 +142,11 @@ def main():
             eval_mean, eval_std = evaluate(agent, envs[0], episodes=EVAL_EPS)
             if eval_mean > best_eval:
                 best_eval = eval_mean
-                torch.save(agent.net.state_dict(), os.path.join(out_dir, "models", "ppo_best.pt"))
+                torch.save(agent.net.state_dict(), os.path.join(paths["models"], "ppo_best.pt"))
 
         if ep % SAVE_EVERY == 0:
-            torch.save(agent.net.state_dict(), os.path.join(out_dir, "models", f"ppo_ckpt_{ep}.pt"))
-        torch.save(agent.net.state_dict(), os.path.join(out_dir, "models", "ppo_latest.pt"))
+            torch.save(agent.net.state_dict(), os.path.join(paths["models"], f"ppo_ckpt_{ep}.pt"))
+        torch.save(agent.net.state_dict(), os.path.join(paths["models"], "ppo_latest.pt"))
 
         with open(log_path, "a", newline="") as f:
             csv.writer(f).writerow([
@@ -151,7 +158,7 @@ def main():
 
         print(f"[PPO] Ep {ep:04d} | Reward={mean_ep_reward:.3f} | Eval={eval_mean:.3f}±{eval_std:.3f} | Time={time.time()-t0:.1f}s")
 
-    # Vẽ đường học
+    #  Lưu và vẽ biểu đồ vào thư mục riêng
     plt.plot(reward_curve)
     plt.xlabel("Episode")
     plt.ylabel("Total Reward (mean over N actors)")
@@ -160,8 +167,8 @@ def main():
     plt.savefig(fig_path, dpi=160)
     plt.close()
 
-    print(f"✅ Saved log -> {log_path}")
-    print(f"✅ Saved figure -> {fig_path}")
+    print(f" Saved log -> {log_path}")
+    print(f" Saved figure -> {fig_path}")
 
 
 if __name__ == "__main__":

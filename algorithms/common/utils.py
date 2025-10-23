@@ -37,7 +37,6 @@ def save_training_log(log_file, iteration, reward):
         writer = csv.writer(f)
         writer.writerow([iteration, reward])
 
-
 def plot_reward_curve(rewards, fig_file, title="Training Reward Curve"):
     """
     Vẽ và lưu biểu đồ reward theo iteration.
@@ -53,17 +52,36 @@ def plot_reward_curve(rewards, fig_file, title="Training Reward Curve"):
     plt.savefig(fig_file, dpi=160)
     plt.close()
 
-
 def ensure_dir(path):
     """
     Đảm bảo thư mục tồn tại, nếu không thì tạo mới.
     """
     os.makedirs(path, exist_ok=True)
 
-
 def count_parameters(model):
     """
     Đếm tổng số tham số trainable trong mạng.
     Hữu ích để theo dõi độ phức tạp mô hình.
     """
-    return sum(p.numel() for p in model.parameters() if p.requires_grad)                  # [B]
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+# 🆕 Hàm bổ sung để quản lý thư mục kết quả
+def make_result_dirs(algorithm_name):
+    """
+    Tạo cấu trúc thư mục lưu kết quả cho từng thuật toán.
+    results/
+        └── <algorithm_name>/
+            ├── figures/
+            ├── logs/
+            └── models/
+    Trả về dict chứa đường dẫn 3 thư mục con.
+    """
+    base_dir = os.path.join("results", algorithm_name)
+    sub_dirs = ["figures", "logs", "models"]
+    for sub in sub_dirs:
+        os.makedirs(os.path.join(base_dir, sub), exist_ok=True)
+    return {
+        "figures": os.path.join(base_dir, "figures"),
+        "logs": os.path.join(base_dir, "logs"),
+        "models": os.path.join(base_dir, "models")
+    }
