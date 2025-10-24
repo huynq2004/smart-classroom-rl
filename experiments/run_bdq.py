@@ -124,7 +124,7 @@ def main():
         if save_every and (ep % save_every == 0 or ep == episodes - 1):
             torch.save(agent.q_net.state_dict(), os.path.join(models_dir, f"bdq_checkpoint_{ep}.pt"))
 
-        # best theo reward episode (bạn có thể thay bằng eval_mean nếu muốn)
+        # best theo reward episode
         if ep_reward > best_reward:
             best_reward = ep_reward
             torch.save(agent.q_net.state_dict(), os.path.join(models_dir, "bdq_best.pt"))

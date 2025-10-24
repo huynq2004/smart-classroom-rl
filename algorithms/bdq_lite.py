@@ -25,27 +25,11 @@ class BDQLiteAgent:
     def __init__(self, state_dim, action_dims, config):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        # ======= Hyper-params
+        # ======= Hyper-params from config
         self.gamma   = float(config.get("gamma", 0.99))
         self.lr      = float(config.get("lr", 1e-4))
         self.batch   = int(config.get("batch_size", 64))
         self.bufsize = int(config.get("buffer_size", 200000))
-
-        # epsilon schedule
-        self.eps_start = float(config.get("epsilon_start", 0.2))
-        self.eps_end   = float(config.get("epsilon_end", 0.02))
-        self.eps_decay = int(config.get("epsilon_decay", 100000))
-        self.eps       = self.eps_start
-
-        # PER
-        self.per_alpha       = float(config.get("per_alpha", 0.6))
-        self.per_beta_start  = float(config.get("per_beta_start", 0.4))
-        self.per_beta_frames = int(config.get("per_beta_frames", 100000))
-
-        # schedules
-        self.warmup_steps        = int(config.get("warmup_steps", 1000))
-        self.target_update_steps = int(config.get("target_update_steps", 1000))
-        self.grad_clip_norm      = float(config.get("grad_clip_norm", 10.0))
 
         # ======= Networks
         self.q_net = BDQNet(state_dim, action_dims).to(self.device)
@@ -53,9 +37,25 @@ class BDQLiteAgent:
         hard_update(self.t_net, self.q_net)
 
         self.optim = torch.optim.Adam(self.q_net.parameters(), lr=self.lr)
-
-        # ======= Replay (PER)
+        
+        # PER params
+        self.per_alpha       = float(config.get("per_alpha", 0.6))
+        self.per_beta_start  = float(config.get("per_beta_start", 0.4))
+        self.per_beta_frames = int(config.get("per_beta_frames", 100000))
+        
+        # ======= Replay (PER) 
         self.buffer = PrioritizedReplayBuffer(self.bufsize, alpha=self.per_alpha)
+        
+        # epsilon schedule
+        self.eps_start = float(config.get("epsilon_start", 0.2))
+        self.eps_end   = float(config.get("epsilon_end", 0.02))
+        self.eps_decay = int(config.get("epsilon_decay", 100000))
+        self.eps       = self.eps_start
+
+        # schedules
+        self.warmup_steps        = int(config.get("warmup_steps", 1000))
+        self.target_update_steps = int(config.get("target_update_steps", 1000))
+        self.grad_clip_norm      = float(config.get("grad_clip_norm", 10.0))
 
         # ======= Book-keeping
         self.n_branches = len(action_dims)
